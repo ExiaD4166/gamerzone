@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Databases
+*.db
+*.sqlite3
+
+# Node / frontend (added when the frontend phase starts)
+node_modules/
+.next/
+
+# Editor/OS/tooling noise
+.vscode/
+.idea/
+.claude/
+.DS_Store
+Thumbs.db
