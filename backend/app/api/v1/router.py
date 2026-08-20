@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 
+from app.api.v1.downloads import router as downloads_router
+
 api_router = APIRouter(prefix="/api/v1")
+api_router.include_router(downloads_router)
 
 
 @api_router.get("/health")
