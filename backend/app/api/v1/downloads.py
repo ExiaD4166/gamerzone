@@ -1,10 +1,7 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.db.session import get_session
+from app.api.deps import SessionDep
 from app.models.download_item import (
     DownloadItem,
     DownloadItemCreate,
@@ -13,11 +10,6 @@ from app.models.download_item import (
 )
 
 router = APIRouter(prefix="/downloads", tags=["downloads"])
-
-# Annotated[X, Depends(...)] bundles "the type" with "how to get one" into a single
-# reusable alias, so every endpoint below just asks for a `SessionDep` instead of
-# repeating `Depends(get_session)` everywhere. FastAPI calls get_session() per request.
-SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 # NOTE: not login-protected yet - auth doesn't exist until Phase 3/4. These endpoints
 # will move behind a `get_current_user` dependency once that lands (Phase 6).
