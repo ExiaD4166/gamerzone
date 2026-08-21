@@ -4,10 +4,10 @@ FastAPI backend for the GamerZone community website.
 
 ## Local setup
 
-**1. Start PostgreSQL** (from the repository root, needs Docker Desktop running):
+**1. Start PostgreSQL and Redis** (from the repository root, needs Docker Desktop running):
 
 ```bash
-docker compose up -d db
+docker compose up -d
 ```
 
 **2. Install Python dependencies:**
@@ -75,7 +75,8 @@ backend/
     ├── core/
     │   └── config.py   # centralized settings (env-var driven)
     ├── db/
-    │   └── session.py  # async engine + per-request session dependency
+    │   ├── session.py  # async engine + per-request session dependency
+    │   └── redis.py    # Redis client + revoked-token blacklist
     ├── models/         # SQLModel table + schema definitions
     └── api/
         └── v1/         # versioned API routes

@@ -1,10 +1,12 @@
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.api.deps import CurrentUserDep, SessionDep
-from app.core.security import create_access_token
+from app.api.deps import CurrentUserDep, SessionDep, oauth2_scheme
+from app.core.security import create_access_token, decode_access_token
+from app.db.redis import blacklist_token
 from app.models.token import Token
 from app.models.user import User, UserCreate, UserRead
 from app.services import user_service
@@ -47,6 +49,34 @@ async def login(
         )
 
     return Token(access_token=create_access_token(user.id))
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    _user: CurrentUserDep,
+) -> None:
+    """Revoke the token used to make this request.
+
+    A JWT can't be "deleted" - it's just a signed string the client holds, and the
+    server keeps no record of it. So instead we remember that this one is no longer
+    acceptable, until the moment it would have expired on its own.
+
+    Requiring CurrentUserDep means only a currently valid token can be revoked, so
+    nobody can flood Redis by posting junk here.
+    """
+    payload = decode_access_token(token)
+    if payload is None:  # pragma: no cover - CurrentUserDep already validated it
+        return
+
+    jti = payload.get("jti")
+    exp = payload.get("exp")
+    if jti is None or exp is None:
+        return
+
+    # Keep the blacklist entry only for the token's remaining lifetime.
+    remaining = int(exp - datetime.now(timezone.utc).timestamp())
+    await blacklist_token(jti, remaining)
 
 
 @router.get("/me", response_model=UserRead)

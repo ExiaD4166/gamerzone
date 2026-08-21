@@ -17,5 +17,23 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    container_name: gamerzone-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    # Persist to disk so revoked tokens stay revoked across a restart. Without this,
+    # a container restart would silently make every blacklisted token valid again.
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - gamerzone_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   gamerzone_pgdata:
+  gamerzone_redisdata:

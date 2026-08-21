@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, timezone
+from typing import Any
+from uuid import uuid4
 
 import jwt
 from pwdlib import PasswordHash
@@ -39,23 +41,27 @@ def create_access_token(subject: str | int) -> str:
     character of the payload and the signature no longer matches, so the token is
     rejected. Never put anything confidential in here.
 
-    `sub` and `exp` are registered JWT claims; `exp` is enforced by PyJWT itself.
+    `sub`, `exp` and `jti` are registered JWT claims; `exp` is enforced by PyJWT
+    itself. `jti` is a unique id for this individual token - it's what logout puts on
+    the blacklist, so revoking one token doesn't touch the user's other sessions.
     """
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
-    payload = {"sub": str(subject), "exp": expire}
+    payload = {"sub": str(subject), "exp": expire, "jti": str(uuid4())}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
-def decode_access_token(token: str) -> str | None:
-    """Verify a token's signature and expiry, returning its subject, or None.
+def decode_access_token(token: str) -> dict[str, Any] | None:
+    """Verify a token's signature and expiry, returning its claims, or None.
 
     jwt.decode() does the real work: it recomputes the signature with SECRET_KEY and
     rejects the token if it doesn't match (tampered/forged), and it also rejects an
     expired one. Both failures raise PyJWTError, which we turn into None so callers
     only have to handle "valid" vs "not valid".
+
+    Returns the whole payload rather than just the subject, because callers now need
+    `jti` (to check revocation) and `exp` (to size the blacklist entry) as well.
     """
     try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except jwt.PyJWTError:
         return None
-    return payload.get("sub")

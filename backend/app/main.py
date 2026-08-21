@@ -5,6 +5,7 @@ from fastapi import FastAPI
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.db.redis import redis_client
 from app.db.session import engine
 
 
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     yield
     await engine.dispose()
+    await redis_client.aclose()
 
 
 app = FastAPI(title=settings.app_name, version=settings.app_version, lifespan=lifespan)

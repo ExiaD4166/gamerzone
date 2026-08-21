@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.security import decode_access_token
+from app.db.redis import is_token_blacklisted
 from app.db.session import get_session
 from app.models.user import User
 
@@ -41,12 +42,19 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    subject = decode_access_token(token)
-    if subject is None:
+    payload = decode_access_token(token)
+    if payload is None:
+        raise credentials_exception
+
+    jti = payload.get("jti")
+    if jti is None or await is_token_blacklisted(jti):
+        # Signature and expiry are fine, but this token was explicitly revoked at
+        # logout. Without this check a copied token would keep working until it
+        # expired, because a JWT carries no server-side state of its own.
         raise credentials_exception
 
     try:
-        user_id = int(subject)
+        user_id = int(payload.get("sub", ""))
     except ValueError:
         raise credentials_exception from None
 
