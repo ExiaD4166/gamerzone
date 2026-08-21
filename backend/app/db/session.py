@@ -1,7 +1,6 @@
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings
@@ -16,14 +15,6 @@ engine = create_async_engine(settings.database_url, echo=settings.debug)
 # expire_on_commit=False keeps attributes on an object readable after commit,
 # instead of forcing a fresh DB round-trip the next time you touch it.
 async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-
-async def init_db() -> None:
-    """Create any tables that don't exist yet, based on every SQLModel(table=True) class
-    that has been imported. This is a quick-start approach for early development;
-    it will be replaced by Alembic migrations once the schema needs to evolve safely."""
-    async with engine.begin() as conn:
-        await conn.run_sync(SQLModel.metadata.create_all)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
