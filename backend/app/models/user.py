@@ -25,6 +25,9 @@ class User(UserBase, table=True):
     hashed_password: str
     is_active: bool = Field(default=True)
     is_verified: bool = Field(default=False)
+    # Admin flag. Signup can never set this - it is granted deliberately, out of band,
+    # which is why it lives on the table but not on UserCreate.
+    is_superuser: bool = Field(default=False)
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True), nullable=False),
@@ -44,4 +47,7 @@ class UserRead(UserBase):
 
     id: int
     is_verified: bool
+    # Safe to expose: it's the caller's own role, and the frontend needs it to decide
+    # whether to show admin controls. The server still enforces it independently.
+    is_superuser: bool
     created_at: datetime

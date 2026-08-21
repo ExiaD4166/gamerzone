@@ -64,3 +64,21 @@ async def get_current_user(
 
 
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
+
+
+async def get_current_superuser(current_user: CurrentUserDep) -> User:
+    """Require an administrator.
+
+    Another link in the chain: this depends on get_current_user, which itself depends
+    on the token and the session. By the time this runs, the caller is already known
+    to be authenticated and active - all that's left is the permission check.
+    """
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This action requires administrator privileges.",
+        )
+    return current_user
+
+
+SuperUserDep = Annotated[User, Depends(get_current_superuser)]
