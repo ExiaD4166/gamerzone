@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.models.user import User, UserCreate
 
 # NOTE: raising HTTPException from the service layer is a pragmatic FastAPI-specific
@@ -19,6 +19,21 @@ async def get_user_by_email(session: AsyncSession, email: str) -> User | None:
 async def get_user_by_username(session: AsyncSession, username: str) -> User | None:
     result = await session.exec(select(User).where(User.username == username))
     return result.first()
+
+
+async def authenticate_user(session: AsyncSession, email: str, password: str) -> User | None:
+    """Return the user if these credentials are valid, otherwise None.
+
+    Deliberately returns the same None for "no such email" and "wrong password".
+    Telling them apart would let an attacker probe which emails are registered
+    (user enumeration), so the caller reports one identical error for both.
+    """
+    user = await get_user_by_email(session, email)
+    if user is None:
+        return None
+    if not verify_password(password, user.hashed_password):
+        return None
+    return user
 
 
 async def create_user(session: AsyncSession, user_in: UserCreate) -> User:
