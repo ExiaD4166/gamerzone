@@ -74,12 +74,30 @@ async def get_current_user(
 CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
-async def get_current_superuser(current_user: CurrentUserDep) -> User:
+async def get_current_verified_user(current_user: CurrentUserDep) -> User:
+    """Require a confirmed email address.
+
+    Signing in is not enough for member content: anyone can type someone else's
+    address at signup, so an unverified account hasn't actually proven it owns it.
+    """
+    if not current_user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email address to access this content.",
+        )
+    return current_user
+
+
+VerifiedUserDep = Annotated[User, Depends(get_current_verified_user)]
+
+
+async def get_current_superuser(current_user: VerifiedUserDep) -> User:
     """Require an administrator.
 
-    Another link in the chain: this depends on get_current_user, which itself depends
-    on the token and the session. By the time this runs, the caller is already known
-    to be authenticated and active - all that's left is the permission check.
+    The last link in the chain: token -> active user -> verified email -> admin. By
+    the time this runs everything else has been checked, so all that's left is the
+    permission test. Building on VerifiedUserDep rather than CurrentUserDep keeps the
+    levels strictly nested - an admin is always also a verified member.
     """
     if not current_user.is_superuser:
         raise HTTPException(

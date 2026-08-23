@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select
 
-from app.api.deps import CurrentUserDep, SessionDep, SuperUserDep
+from app.api.deps import SessionDep, SuperUserDep, VerifiedUserDep
 from app.models.download_item import (
     DownloadItem,
     DownloadItemCreate,
@@ -11,9 +11,10 @@ from app.models.download_item import (
 
 router = APIRouter(prefix="/downloads", tags=["downloads"])
 
-# Access model: any signed-in member may read the links (this is the members-only
-# download page), but only administrators may add, edit or remove them.
-# Declaring CurrentUserDep/SuperUserDep is enough - FastAPI resolves the dependency
+# Access model: reading the links requires a signed-in member with a verified email
+# address (this is the members-only download page), while only administrators may
+# add, edit or remove them.
+# Declaring VerifiedUserDep/SuperUserDep is enough - FastAPI resolves the dependency
 # and rejects the request before the function body ever runs.
 
 
@@ -29,13 +30,13 @@ async def create_download_item(
 
 
 @router.get("/", response_model=list[DownloadItemRead])
-async def list_download_items(session: SessionDep, _user: CurrentUserDep) -> list[DownloadItem]:
+async def list_download_items(session: SessionDep, _user: VerifiedUserDep) -> list[DownloadItem]:
     result = await session.exec(select(DownloadItem))
     return list(result.all())
 
 
 @router.get("/{item_id}", response_model=DownloadItemRead)
-async def get_download_item(item_id: int, session: SessionDep, _user: CurrentUserDep) -> DownloadItem:
+async def get_download_item(item_id: int, session: SessionDep, _user: VerifiedUserDep) -> DownloadItem:
     item = await session.get(DownloadItem, item_id)
     if item is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Download item not found")

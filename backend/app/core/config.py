@@ -17,6 +17,17 @@ class Settings(BaseSettings):
 
     redis_url: str
 
+    mail_host: str
+    mail_port: int = 1025
+    mail_username: str = ""
+    mail_password: str = ""
+    mail_use_tls: bool = False
+    mail_from: str = "noreply@gamerzone.local"
+    mail_from_name: str = "GamerZone"
+
+    email_verification_expire_hours: int = 24
+    verification_url_base: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

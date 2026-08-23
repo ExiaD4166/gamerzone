@@ -36,6 +36,16 @@ async def authenticate_user(session: AsyncSession, email: str, password: str) ->
     return user
 
 
+async def mark_email_verified(session: AsyncSession, user: User) -> User:
+    """Flip the account to verified. Idempotent: clicking the link twice is harmless."""
+    if not user.is_verified:
+        user.is_verified = True
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+    return user
+
+
 async def create_user(session: AsyncSession, user_in: UserCreate) -> User:
     """Register a new account: reject duplicates, hash the password, store the user."""
     if await get_user_by_email(session, user_in.email):

@@ -1,30 +1,83 @@
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import EmailStr
 
 from app.api.deps import CurrentUserDep, SessionDep, oauth2_scheme
 from app.core.security import create_access_token, decode_access_token
+from app.core.tokens import verify_email_verification_token
 from app.db.redis import blacklist_token
 from app.models.token import Token
 from app.models.user import User, UserCreate, UserRead
 from app.services import user_service
+from app.services.mail_service import send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/signup", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def signup(user_in: UserCreate, session: SessionDep) -> User:
-    """Register a new GamerZone account.
+async def signup(
+    user_in: UserCreate, session: SessionDep, background_tasks: BackgroundTasks
+) -> User:
+    """Register a new GamerZone account and send its verification email.
 
     The router stays thin on purpose: it only deals with HTTP concerns (the request
     body, the status code, the response shape) and delegates the actual rules to the
     service layer. response_model=UserRead is the security boundary - even though this
     returns a full User object, FastAPI serialises it through UserRead, so
     hashed_password physically cannot appear in the response.
+
+    The email is queued as a background task rather than awaited, so talking to the
+    SMTP server doesn't hold up the response. FastAPI runs it after the 201 is sent.
     """
-    return await user_service.create_user(session, user_in)
+    user = await user_service.create_user(session, user_in)
+    background_tasks.add_task(send_verification_email, user.email, user.username)
+    return user
+
+
+@router.get("/verify")
+async def verify_email(token: str, session: SessionDep) -> dict[str, str]:
+    """Confirm an email address from the link in the verification message.
+
+    A GET because this is reached by clicking a link. The token itself carries the
+    address and its own issue time, so nothing about it had to be stored server-side.
+    """
+    email = verify_email_verification_token(token)
+    if email is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This verification link is invalid or has expired.",
+        )
+
+    user = await user_service.get_user_by_email(session, email)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This verification link is invalid or has expired.",
+        )
+
+    await user_service.mark_email_verified(session, user)
+    return {"message": "Email verified successfully. You can now sign in and browse downloads."}
+
+
+@router.post("/resend-verification", status_code=status.HTTP_202_ACCEPTED)
+async def resend_verification(
+    email: EmailStr, session: SessionDep, background_tasks: BackgroundTasks
+) -> dict[str, str]:
+    """Send a fresh verification link.
+
+    Always reports the same thing, whether or not that address has an account and
+    whether or not it is already verified. Saying "no such user" here would let an
+    attacker discover which addresses are registered - the same user-enumeration
+    problem the login endpoint avoids.
+    """
+    user = await user_service.get_user_by_email(session, email)
+    if user is not None and not user.is_verified:
+        background_tasks.add_task(send_verification_email, user.email, user.username)
+
+    return {"message": "If that address needs verification, a new link is on its way."}
 
 
 @router.post("/login", response_model=Token)

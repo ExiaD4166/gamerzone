@@ -34,6 +34,18 @@ services:
       timeout: 5s
       retries: 5
 
+  # Development-only fake SMTP server. It accepts mail exactly like a real provider
+  # but delivers nothing to the outside world - everything lands in its web inbox at
+  # http://localhost:8025 instead. This makes it impossible to accidentally email a
+  # real person while testing. In production these settings point at a real provider.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: gamerzone-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"  # SMTP, where the app sends
+      - "${MAILPIT_UI_PORT:-8025}:8025"    # web inbox, where you read
+
 volumes:
   gamerzone_pgdata:
   gamerzone_redisdata:

@@ -4,11 +4,16 @@ FastAPI backend for the GamerZone community website.
 
 ## Local setup
 
-**1. Start PostgreSQL and Redis** (from the repository root, needs Docker Desktop running):
+**1. Start PostgreSQL, Redis and Mailpit** (from the repository root, needs Docker
+Desktop running):
 
 ```bash
 docker compose up -d
 ```
+
+Mailpit is a fake SMTP server for development: the app sends mail to it exactly as it
+would to a real provider, but nothing leaves your machine. Read what was "sent" at
+**http://localhost:8025** — that's where verification links appear.
 
 **2. Install Python dependencies:**
 
@@ -73,11 +78,14 @@ backend/
 └── app/
     ├── main.py         # FastAPI app instance, lifespan, mounts routers
     ├── core/
-    │   └── config.py   # centralized settings (env-var driven)
+    │   ├── config.py   # centralized settings (env-var driven)
+    │   ├── security.py # password hashing + JWT create/decode
+    │   └── tokens.py   # signed, expiring links (email verification)
     ├── db/
     │   ├── session.py  # async engine + per-request session dependency
     │   └── redis.py    # Redis client + revoked-token blacklist
     ├── models/         # SQLModel table + schema definitions
+    ├── services/       # business logic (users, mail)
     └── api/
         └── v1/         # versioned API routes
 ```
