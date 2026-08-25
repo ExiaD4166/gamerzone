@@ -33,6 +33,17 @@ class Settings(BaseSettings):
     password_reset_expire_minutes: int = 60
     password_reset_url_base: str
 
+    # Browsers refuse cross-origin calls unless the server names the caller, so the
+    # frontend's address has to be listed here. Comma-separated; never "*", because a
+    # wildcard is incompatible with allow_credentials and would let any site call this
+    # API with the user's token.
+    cors_origins: str = "http://localhost:3000"
+    log_level: str = "INFO"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

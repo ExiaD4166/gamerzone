@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr
 
 from app.api.deps import CurrentUserDep, SessionDep, oauth2_scheme
+from app.core.exceptions import InvalidTokenError
 from app.core.security import create_access_token, decode_access_token
 from app.core.tokens import verify_email_verification_token
 from app.db.redis import blacklist_token
@@ -52,17 +53,11 @@ async def verify_email(token: str, session: SessionDep) -> dict[str, str]:
     """
     email = verify_email_verification_token(token)
     if email is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This verification link is invalid or has expired.",
-        )
+        raise InvalidTokenError("This verification link is invalid or has expired.")
 
     user = await user_service.get_user_by_email(session, email)
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This verification link is invalid or has expired.",
-        )
+        raise InvalidTokenError("This verification link is invalid or has expired.")
 
     await user_service.mark_email_verified(session, user)
     return {"message": "Email verified successfully. You can now sign in and browse downloads."}
@@ -136,13 +131,7 @@ async def reset_password(body: PasswordResetConfirm, session: SessionDep) -> dic
     forged, already used, wrong purpose - because distinguishing them would only help
     someone probing for a token that still works.
     """
-    succeeded = await user_service.reset_password(session, body.token, body.new_password)
-    if not succeeded:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This reset link is invalid, expired, or has already been used.",
-        )
-
+    await user_service.reset_password(session, body.token, body.new_password)
     return {"message": "Password updated. You have been signed out on all devices."}
 
 
