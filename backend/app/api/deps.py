@@ -68,6 +68,14 @@ async def get_current_user(
             detail="This account has been deactivated.",
         )
 
+    # A password change invalidates every session that predates it. The blacklist
+    # revokes one token at a time; this revokes all of them at once, which is what a
+    # password reset needs - it must not leave an intruder's session alive.
+    issued_at = payload.get("iat")
+    if user.password_changed_at is not None and issued_at is not None:
+        if issued_at < user.password_changed_at.timestamp():
+            raise credentials_exception
+
     return user
 
 

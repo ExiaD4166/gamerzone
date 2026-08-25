@@ -41,12 +41,20 @@ def create_access_token(subject: str | int) -> str:
     character of the payload and the signature no longer matches, so the token is
     rejected. Never put anything confidential in here.
 
-    `sub`, `exp` and `jti` are registered JWT claims; `exp` is enforced by PyJWT
-    itself. `jti` is a unique id for this individual token - it's what logout puts on
-    the blacklist, so revoking one token doesn't touch the user's other sessions.
+    `sub`, `exp`, `iat` and `jti` are registered JWT claims; `exp` is enforced by
+    PyJWT itself. `jti` is a unique id for this individual token - it's what logout
+    puts on the blacklist, so revoking one token doesn't touch the user's other
+    sessions. `iat` records when the token was minted, which lets a password change
+    invalidate every token issued before it in one comparison.
     """
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
-    payload = {"sub": str(subject), "exp": expire, "jti": str(uuid4())}
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=settings.access_token_expire_minutes)
+    payload = {
+        "sub": str(subject),
+        "exp": expire,
+        "iat": now,
+        "jti": str(uuid4()),
+    }
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 

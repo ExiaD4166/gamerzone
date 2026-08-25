@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 import aiosmtplib
 
 from app.core.config import settings
-from app.core.tokens import generate_email_verification_token
+from app.core.tokens import generate_email_verification_token, generate_password_reset_token
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +78,54 @@ async def send_verification_email(to: str, username: str) -> None:
     await send_email(
         to=to,
         subject="Verify your GamerZone account",
+        plain_body=plain_body,
+        html_body=html_body,
+    )
+
+
+async def send_password_reset_email(to: str, username: str, hashed_password: str) -> None:
+    """Send the "reset your password" message.
+
+    The current password hash goes in only as a fingerprint inside the token, never in
+    the message, so this link stops working the moment the password actually changes.
+    """
+    token = generate_password_reset_token(to, hashed_password)
+    link = f"{settings.password_reset_url_base}?{urlencode({'token': token})}"
+    minutes = settings.password_reset_expire_minutes
+
+    plain_body = (
+        f"Hi {username},\n\n"
+        "Someone asked to reset the password for your GamerZone account. "
+        "Use the link below to choose a new one:\n\n"
+        f"{link}\n\n"
+        f"This link expires in {minutes} minutes and can only be used once.\n"
+        "If this wasn't you, ignore this email - your password stays unchanged.\n"
+    )
+
+    html_body = f"""\
+<html>
+  <body style="font-family: system-ui, sans-serif; line-height: 1.6; color: #e5e5e5;
+               background: #111; padding: 32px;">
+    <h2 style="color: #fff; margin-top: 0;">Reset your password</h2>
+    <p>Hi {username}, someone asked to reset the password for your GamerZone account.</p>
+    <p style="margin: 28px 0;">
+      <a href="{link}"
+         style="background: #6d28d9; color: #fff; padding: 12px 22px;
+                border-radius: 8px; text-decoration: none; font-weight: 600;">
+        Choose a new password
+      </a>
+    </p>
+    <p style="color: #9a9a9a; font-size: 14px;">
+      This link expires in {minutes} minutes and can only be used once.
+      If this wasn't you, you can ignore this email - your password stays unchanged.
+    </p>
+  </body>
+</html>
+"""
+
+    await send_email(
+        to=to,
+        subject="Reset your GamerZone password",
         plain_body=plain_body,
         html_body=html_body,
     )

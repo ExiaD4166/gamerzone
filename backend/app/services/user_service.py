@@ -1,9 +1,12 @@
+from datetime import datetime, timezone
+
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.security import hash_password, verify_password
+from app.core.tokens import password_fingerprint, verify_password_reset_token
 from app.models.user import User, UserCreate
 
 # NOTE: raising HTTPException from the service layer is a pragmatic FastAPI-specific
@@ -34,6 +37,36 @@ async def authenticate_user(session: AsyncSession, email: str, password: str) ->
     if not verify_password(password, user.hashed_password):
         return None
     return user
+
+
+async def reset_password(session: AsyncSession, token: str, new_password: str) -> bool:
+    """Apply a password reset. Returns False if the token isn't usable.
+
+    Three things must hold: the token has to be genuine, unexpired and minted for this
+    purpose; it has to name a real account; and its fingerprint has to still match that
+    account's current password. The last check is what makes a token single-use -
+    completing a reset changes the hash, so the fingerprint stops matching and neither
+    this token nor any other outstanding one can be replayed.
+    """
+    result = verify_password_reset_token(token)
+    if result is None:
+        return False
+    email, fingerprint = result
+
+    user = await get_user_by_email(session, email)
+    if user is None:
+        return False
+
+    if fingerprint != password_fingerprint(user.hashed_password):
+        return False
+
+    user.hashed_password = hash_password(new_password)
+    # Recorded so get_current_user can refuse tokens issued before this instant,
+    # signing the account out of every device.
+    user.password_changed_at = datetime.now(timezone.utc)
+    session.add(user)
+    await session.commit()
+    return True
 
 
 async def mark_email_verified(session: AsyncSession, user: User) -> User:

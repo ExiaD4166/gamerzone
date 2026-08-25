@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     email_verification_expire_hours: int = 24
     verification_url_base: str
 
+    # Much shorter than verification: a leaked reset link hands over the whole account,
+    # so the window in which one is useful is kept small.
+    password_reset_expire_minutes: int = 60
+    password_reset_url_base: str
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 

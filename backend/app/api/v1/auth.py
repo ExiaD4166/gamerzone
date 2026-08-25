@@ -10,9 +10,15 @@ from app.core.security import create_access_token, decode_access_token
 from app.core.tokens import verify_email_verification_token
 from app.db.redis import blacklist_token
 from app.models.token import Token
-from app.models.user import User, UserCreate, UserRead
+from app.models.user import (
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    User,
+    UserCreate,
+    UserRead,
+)
 from app.services import user_service
-from app.services.mail_service import send_verification_email
+from app.services.mail_service import send_password_reset_email, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -102,6 +108,42 @@ async def login(
         )
 
     return Token(access_token=create_access_token(user.id))
+
+
+@router.post("/forgot-password", status_code=status.HTTP_202_ACCEPTED)
+async def forgot_password(
+    body: PasswordResetRequest, session: SessionDep, background_tasks: BackgroundTasks
+) -> dict[str, str]:
+    """Start a password reset by emailing a one-time link.
+
+    Replies the same way for every address, registered or not - otherwise this
+    endpoint would happily tell an attacker which emails have accounts.
+    """
+    user = await user_service.get_user_by_email(session, body.email)
+    if user is not None and user.is_active:
+        background_tasks.add_task(
+            send_password_reset_email, user.email, user.username, user.hashed_password
+        )
+
+    return {"message": "If that address has an account, a reset link is on its way."}
+
+
+@router.post("/reset-password")
+async def reset_password(body: PasswordResetConfirm, session: SessionDep) -> dict[str, str]:
+    """Set a new password using the token from the emailed link.
+
+    A single generic failure covers every reason a token might be unusable - expired,
+    forged, already used, wrong purpose - because distinguishing them would only help
+    someone probing for a token that still works.
+    """
+    succeeded = await user_service.reset_password(session, body.token, body.new_password)
+    if not succeeded:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This reset link is invalid, expired, or has already been used.",
+        )
+
+    return {"message": "Password updated. You have been signed out on all devices."}
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

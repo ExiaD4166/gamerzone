@@ -32,6 +32,13 @@ class User(UserBase, table=True):
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True), nullable=False),
     )
+    # Set whenever the password changes. Access tokens issued before this moment are
+    # refused, which is how a reset signs the account out everywhere at once.
+    # Nullable: accounts that have never changed their password simply have no cutoff.
+    password_changed_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
 
 
 class UserCreate(UserBase):
@@ -39,6 +46,23 @@ class UserCreate(UserBase):
     exists, and it never reaches the database in this form."""
 
     password: str = Field(min_length=8, max_length=128)
+
+
+class PasswordResetRequest(SQLModel):
+    """Body of "I forgot my password" - just the address to send the link to."""
+
+    email: EmailStr
+
+
+class PasswordResetConfirm(SQLModel):
+    """Body of the actual reset: the token from the emailed link, and the new password.
+
+    Reuses the same min_length as signup so the rules can't be sidestepped by
+    resetting into a weaker password than registration would have allowed.
+    """
+
+    token: str
+    new_password: str = Field(min_length=8, max_length=128)
 
 
 class UserRead(UserBase):
