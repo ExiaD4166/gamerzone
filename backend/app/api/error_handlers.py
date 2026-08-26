@@ -56,7 +56,7 @@ def register_error_handlers(app: FastAPI) -> None:
         match, with the per-field details kept under `errors` for form highlighting."""
         body = _error_body(request, "The submitted data is invalid.", "validation_error")
         body["errors"] = exc.errors()  # type: ignore[assignment]
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=body)
+        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, content=body)
 
     @app.exception_handler(Exception)
     async def handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:

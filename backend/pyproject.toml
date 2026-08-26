@@ -1,0 +1,29 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# "auto" means every async test function is run by pytest-asyncio without needing an
+# @pytest.mark.asyncio decorator on each one. Our whole codebase is async, so opting
+# in per test would just be noise.
+asyncio_mode = "auto"
+
+# Fixtures that set up the database live for the whole session rather than being torn
+# down and rebuilt between tests. Tests must share that same event loop: a database
+# connection opened on one loop cannot be used from another ("attached to a different
+# loop"), so both settings have to say "session".
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+
+addopts = "-v --strict-markers"
+
+[tool.coverage.run]
+source = ["app"]
+# SQLAlchemy's async support runs application code inside greenlets, and anyio may use
+# worker threads. Without naming both, coverage silently reports code that definitely
+# ran as untested - which is worse than no coverage number at all.
+concurrency = ["greenlet", "thread"]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

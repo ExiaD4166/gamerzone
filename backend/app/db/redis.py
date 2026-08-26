@@ -15,15 +15,15 @@ _BLACKLIST_PREFIX = "blacklist:jti:"
 async def blacklist_token(jti: str, expires_in_seconds: int) -> None:
     """Mark one token as revoked until it would have expired anyway.
 
-    SETEX stores the key with a time-to-live, so Redis deletes it automatically once
-    the token's own expiry has passed - after that the token is rejected by the expiry
-    check regardless, so keeping the entry would be pointless. This is what stops the
+    `ex=` sets a time-to-live, so Redis deletes the key automatically once the token's
+    own expiry has passed - after that the token is rejected by the expiry check
+    regardless, so keeping the entry would be pointless. This is what stops the
     blacklist from growing without bound.
     """
     if expires_in_seconds <= 0:
-        # Already expired: nothing to revoke, and SETEX rejects a non-positive TTL.
+        # Already expired: nothing to revoke, and a non-positive TTL is rejected.
         return
-    await redis_client.setex(f"{_BLACKLIST_PREFIX}{jti}", expires_in_seconds, "revoked")
+    await redis_client.set(f"{_BLACKLIST_PREFIX}{jti}", "revoked", ex=expires_in_seconds)
 
 
 async def is_token_blacklisted(jti: str) -> bool:

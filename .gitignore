@@ -24,3 +24,8 @@ node_modules/
 .claude/
 .DS_Store
 Thumbs.db
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
