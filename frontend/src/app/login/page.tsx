@@ -9,8 +9,14 @@ export const metadata: Metadata = {
   title: "Sign in",
 };
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reset?: string }>;
+}) {
   if (await getCurrentUser()) redirect("/profile");
+
+  const { reset } = await searchParams;
 
   return (
     <AuthCard
@@ -22,6 +28,15 @@ export default async function LoginPage() {
         </>
       }
     >
+      {reset ? (
+        <p
+          role="status"
+          className="mb-6 rounded-lg border border-[#2f4a35] bg-[#16211a] px-4 py-3 text-[14px] leading-relaxed text-[#8fd0a3]"
+        >
+          Your password has been changed. Sign in with the new one.
+        </p>
+      ) : null}
+
       <LoginForm />
     </AuthCard>
   );

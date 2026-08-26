@@ -80,8 +80,9 @@ export async function logoutAction(): Promise<never> {
 }
 
 /**
- * Resend needs three states, not two: nothing submitted yet, sent, and failed.
- * A plain `error: null` cannot tell "no problem" apart from "not asked yet".
+ * Some forms need three states, not two: nothing submitted yet, done, and
+ * failed. A plain `error: null` cannot tell "no problem" apart from "not asked
+ * yet", which would show a success message before the user had done anything.
  */
 export type ResendState = { status: "idle" | "sent"; error: string | null };
 
@@ -102,4 +103,57 @@ export async function resendVerificationAction(
   // addresses that exist and ones that don't, and repeating that here keeps the
   // frontend from leaking what the API is careful not to.
   return { status: "sent", error: null };
+}
+
+export async function forgotPasswordAction(
+  _previous: ResendState,
+  formData: FormData,
+): Promise<ResendState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) {
+    return { status: "idle", error: "Please enter your email address." };
+  }
+
+  await api("/api/v1/auth/forgot-password", { method: "POST", json: { email } });
+
+  // Same reasoning as resend: one answer for every address, so this cannot be
+  // used to find out who has an account.
+  return { status: "sent", error: null };
+}
+
+export async function resetPasswordAction(
+  _previous: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const token = String(formData.get("token") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const confirmation = String(formData.get("password_confirmation") ?? "");
+
+  if (!token) {
+    return { error: "This reset link is missing its code. Please request a new one." };
+  }
+  if (!password) {
+    return { error: "Please choose a new password." };
+  }
+  // Checked here rather than by the API, which never sees the second field —
+  // it exists purely to catch a typo before the password is committed.
+  if (password !== confirmation) {
+    return { error: "Those two passwords don't match." };
+  }
+
+  const result = await api("/api/v1/auth/reset-password", {
+    method: "POST",
+    json: { token, new_password: password },
+  });
+
+  if (!result.ok) {
+    return { error: result.error.detail };
+  }
+
+  // Changing the password invalidates every token issued before it, including
+  // one this browser may still be holding. Dropping the cookie keeps the UI
+  // honest — otherwise the header would claim the visitor is signed in while
+  // every request quietly failed.
+  await clearSession();
+  redirect("/login?reset=1");
 }
