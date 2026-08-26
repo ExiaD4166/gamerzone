@@ -7,13 +7,9 @@ import { api, type User } from "@/lib/api";
 /**
  * The signed-in session.
  *
- * The access token lives in an httpOnly cookie, which means browser JavaScript
- * cannot read it at all — `document.cookie` simply does not show it. Even a
- * cross-site scripting bug on this site could not steal a token it has no way to
- * see. The alternative, localStorage, is readable by any script on the page.
- *
- * The browser holds the cookie and sends it back automatically; only this
- * server-side code ever unwraps it and forwards it to the API.
+ * The token lives in an httpOnly cookie, so browser JavaScript cannot read it —
+ * an XSS bug on this site would have nothing to steal. localStorage would hand it
+ * over in one line. Only this server-side code unwraps it and forwards it.
  */
 
 const COOKIE_NAME = "gz_session";
@@ -24,9 +20,9 @@ const MAX_AGE_SECONDS = 30 * 60;
 export async function createSession(token: string): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true, // invisible to JavaScript
+    httpOnly: true,
     sameSite: "lax", // not sent on cross-site POSTs, which blocks basic CSRF
-    secure: process.env.NODE_ENV === "production", // HTTPS only once deployed
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: MAX_AGE_SECONDS,
   });
@@ -45,11 +41,9 @@ export async function clearSession(): Promise<void> {
 /**
  * The signed-in user, or null.
  *
- * This asks the API every time rather than trusting the cookie on its own. The
- * token is a snapshot up to thirty minutes old: the account may since have been
- * deactivated, verified, or signed out on another device, and only the API
- * knows. A stale cookie is dropped so the visitor is simply treated as signed
- * out rather than being shown an error.
+ * Asks the API every time rather than trusting the cookie: the token is a snapshot
+ * up to thirty minutes old, and the account may since have been deactivated,
+ * verified, or signed out elsewhere. A stale cookie just reads as signed out.
  */
 export async function getCurrentUser(): Promise<User | null> {
   const token = await getSessionToken();

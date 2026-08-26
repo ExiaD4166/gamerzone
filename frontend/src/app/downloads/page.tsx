@@ -69,12 +69,11 @@ function Panel({
 }
 
 /**
- * The members-only download page.
+ * Three states: signed out, unconfirmed, confirmed.
  *
- * Three states: signed out, signed in but unconfirmed, and confirmed. The gate
- * here is presentational — the API refuses the request outright for the first
- * two, so the links never reach a browser that hasn't earned them. Hiding them
- * in the UI is a courtesy, not the security boundary.
+ * The gate here is presentational. The API refuses the first two outright, so the
+ * links never reach a browser that hasn't earned them — hiding them in the UI is a
+ * courtesy, not the security boundary.
  */
 export default async function DownloadsPage() {
   const user = await getCurrentUser();

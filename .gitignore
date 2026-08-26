@@ -29,3 +29,8 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Long-form internal notes — the reasoning behind the code, kept out of the
+# public repo. See CLAUDE.md / PROJECT_NOTES.md.
+/PROJECT_NOTES.md
+/CLAUDE.md

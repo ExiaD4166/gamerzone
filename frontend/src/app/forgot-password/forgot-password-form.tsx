@@ -12,8 +12,7 @@ export function ForgotPasswordForm() {
 
   if (state.status === "sent" && !isPending) {
     return (
-      // Deliberately vague: the API answers the same way whether or not that
-      // address has an account, and saying "we found you" here would undo that.
+      // Deliberately vague, matching what the API withholds.
       <p
         role="status"
         className="rounded-xl border border-line bg-surface px-5 py-6 text-[15px] leading-relaxed text-ink-2"

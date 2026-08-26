@@ -1,36 +1,21 @@
 import Image from "next/image";
 
 type PageHeroProps = {
-  /**
-   * Path under /public, e.g. "/images/hero-home.jpg". Omit it for a page that
-   * has no photograph of its own — a warm gradient stands in, keeping the same
-   * proportions and rhythm as the other pages.
-   */
+  /** Path under /public. Omit for a gradient stand-in. */
   image?: string;
-  /** Describes the picture for screen readers and when the image fails to load. */
   imageAlt?: string;
   title: string;
-  /** Small line above the title. */
   kicker?: string;
-  /**
-   * Only the page that loads first should be priority — it stops Next.js lazy
-   * loading an image that is visible immediately, which would otherwise show up
-   * as a slow largest-contentful-paint.
-   */
+  /** Set on above-the-fold heroes, so they aren't lazy loaded. */
   priority?: boolean;
   /** A shorter band, for pages whose content matters more than their header. */
   compact?: boolean;
 };
 
 /**
- * The cinematic header used at the top of every page: a full-bleed screenshot
- * that dissolves into the page background, with the title sitting inside the
- * fade.
- *
- * It deliberately starts BELOW the navigation rather than running behind it, so
- * the links always sit on a solid bar and stay readable whatever the photo is.
- *
- * Each page passes its own image; nothing else has to change.
+ * The cinematic page header: a full-bleed screenshot dissolving into the page, with
+ * the title inside the fade. It starts BELOW the navigation rather than behind it,
+ * so the links stay readable whatever the photo is.
  */
 export function PageHero({
   image,
@@ -42,8 +27,8 @@ export function PageHero({
 }: PageHeroProps) {
   return (
     <section className="relative isolate">
-      {/* Fixed aspect ratio so the crop is identical on every page and the
-          browser reserves the right height before the image arrives. */}
+      {/* Fixed ratio: identical crop everywhere, and the height is reserved before
+          the image arrives. */}
       <div
         className={`relative w-full overflow-hidden ${
           compact
@@ -61,18 +46,15 @@ export function PageHero({
             className="object-cover"
           />
         ) : (
-          // The stand-in when a page has no photo: a warm dusk-ish wash, so the
-          // header still reads as part of the same site.
+          // Stand-in when a page has no photo of its own.
           <div
             aria-hidden
             className="absolute inset-0 bg-[radial-gradient(ellipse_60%_70%_at_30%_20%,#3a332c,transparent_70%),radial-gradient(ellipse_50%_60%_at_85%_40%,#2e2723,transparent_70%),linear-gradient(180deg,#232020,#151312)]"
           />
         )}
 
-        {/* Two stacked gradients: a gentle darkening across the whole image so
-            white text stays readable, then a stronger fade that blends the
-            bottom edge into the page. aria-hidden because they are pure
-            decoration. */}
+        {/* A gentle overall darkening so white text stays readable, then a stronger
+            fade blending the bottom edge into the page. */}
         <div
           aria-hidden
           className="absolute inset-0 bg-gradient-to-b from-ground/20 via-transparent to-transparent"

@@ -28,16 +28,13 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def signup(
     user_in: UserCreate, session: SessionDep, background_tasks: BackgroundTasks
 ) -> User:
-    """Register a new GamerZone account and send its verification email.
+    """Register a new account and send its verification email.
 
-    The router stays thin on purpose: it only deals with HTTP concerns (the request
-    body, the status code, the response shape) and delegates the actual rules to the
-    service layer. response_model=UserRead is the security boundary - even though this
-    returns a full User object, FastAPI serialises it through UserRead, so
-    hashed_password physically cannot appear in the response.
+    response_model=UserRead is the security boundary: this returns a full User, and
+    FastAPI serialises it through UserRead, so the hash cannot reach the response.
 
-    The email is queued as a background task rather than awaited, so talking to the
-    SMTP server doesn't hold up the response. FastAPI runs it after the 201 is sent.
+    The email is queued rather than awaited, so the SMTP round trip doesn't hold up
+    the 201.
     """
     user = await user_service.create_user(session, user_in)
     background_tasks.add_task(send_verification_email, user.email, user.username)
@@ -48,8 +45,8 @@ async def signup(
 async def verify_email(token: str, session: SessionDep) -> dict[str, str]:
     """Confirm an email address from the link in the verification message.
 
-    A GET because this is reached by clicking a link. The token itself carries the
-    address and its own issue time, so nothing about it had to be stored server-side.
+    A GET because it is reached by clicking a link. The token carries the address and
+    its own issue time, so nothing about it is stored server-side.
     """
     email = verify_email_verification_token(token)
     if email is None:
@@ -69,10 +66,8 @@ async def resend_verification(
 ) -> dict[str, str]:
     """Send a fresh verification link.
 
-    Always reports the same thing, whether or not that address has an account and
-    whether or not it is already verified. Saying "no such user" here would let an
-    attacker discover which addresses are registered - the same user-enumeration
-    problem the login endpoint avoids.
+    Reports the same thing whether or not the address has an account, and whether or
+    not it is already verified - otherwise this becomes a way to enumerate accounts.
     """
     user = await user_service.get_user_by_email(session, email)
     if user is not None and not user.is_verified:
@@ -88,10 +83,9 @@ async def login(
 ) -> Token:
     """Exchange credentials for an access token.
 
-    Takes form data rather than JSON, with the credential in a field called
-    `username`, because the OAuth2 password flow specifies exactly that. We treat that
-    field as the user's email. Following the spec is what makes /docs' Authorize
-    button and any standard OAuth2 client work against this API.
+    Form-encoded with the credential in a field named `username`, because the OAuth2
+    password flow specifies exactly that; we treat that field as the email. Following
+    the spec is what makes /docs' Authorize button and any OAuth2 client work here.
     """
     user = await user_service.authenticate_user(session, form_data.username, form_data.password)
     if user is None:
@@ -112,7 +106,7 @@ async def forgot_password(
     """Start a password reset by emailing a one-time link.
 
     Replies the same way for every address, registered or not - otherwise this
-    endpoint would happily tell an attacker which emails have accounts.
+    endpoint tells an attacker which emails have accounts.
     """
     user = await user_service.get_user_by_email(session, body.email)
     if user is not None and user.is_active:
@@ -125,12 +119,7 @@ async def forgot_password(
 
 @router.post("/reset-password")
 async def reset_password(body: PasswordResetConfirm, session: SessionDep) -> dict[str, str]:
-    """Set a new password using the token from the emailed link.
-
-    A single generic failure covers every reason a token might be unusable - expired,
-    forged, already used, wrong purpose - because distinguishing them would only help
-    someone probing for a token that still works.
-    """
+    """Set a new password using the token from the emailed link."""
     await user_service.reset_password(session, body.token, body.new_password)
     return {"message": "Password updated. You have been signed out on all devices."}
 
@@ -142,12 +131,11 @@ async def logout(
 ) -> None:
     """Revoke the token used to make this request.
 
-    A JWT can't be "deleted" - it's just a signed string the client holds, and the
-    server keeps no record of it. So instead we remember that this one is no longer
-    acceptable, until the moment it would have expired on its own.
+    A JWT cannot be deleted - the client holds it and the server keeps no record - so
+    instead we remember it is no longer acceptable until it would have expired anyway.
 
-    Requiring CurrentUserDep means only a currently valid token can be revoked, so
-    nobody can flood Redis by posting junk here.
+    CurrentUserDep means only a currently valid token can be revoked, so nobody can
+    flood Redis by posting junk here.
     """
     payload = decode_access_token(token)
     if payload is None:  # pragma: no cover - CurrentUserDep already validated it
@@ -165,10 +153,4 @@ async def logout(
 
 @router.get("/me", response_model=UserRead)
 async def read_current_user(current_user: CurrentUserDep) -> User:
-    """Return the signed-in user's own profile.
-
-    The body is a single line because CurrentUserDep already did the work: extracted
-    the token, verified its signature and expiry, loaded the user, and checked the
-    account is active. This is the pattern every protected endpoint will follow.
-    """
     return current_user

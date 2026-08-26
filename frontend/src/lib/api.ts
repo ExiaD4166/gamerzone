@@ -3,14 +3,12 @@ import "server-only";
 /**
  * The one place the frontend talks to the FastAPI backend.
  *
- * `server-only` makes this a build error if a Client Component ever imports it.
- * That matters: everything here runs with the user's access token, and the token
- * must never be bundled into code that reaches a browser.
+ * `server-only` makes this a build error if a Client Component ever imports it —
+ * everything here runs with the user's access token.
  */
 
 const API_URL = process.env.API_URL ?? "http://127.0.0.1:8000";
 
-/** The error shape every endpoint returns — see the backend's error handlers. */
 export type ApiError = {
   detail: string;
   code: string;
@@ -21,20 +19,14 @@ export type ApiResult<T> = { ok: true; data: T } | { ok: false; error: ApiError;
 
 type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
-  /** Sent as JSON. */
   json?: unknown;
-  /** Sent as an HTML form body, which the OAuth2 login endpoint requires. */
+  /** Form-encoded body, which the OAuth2 login endpoint requires. */
   form?: Record<string, string>;
-  /** The caller's access token, when the endpoint needs one. */
   token?: string;
-  /** Opt out of caching for anything user-specific. */
   cache?: RequestCache;
 };
 
-/**
- * Calls the API and always resolves — never throws — so callers handle failure
- * as a value rather than wrapping everything in try/catch.
- */
+/** Always resolves, never throws, so callers handle failure as a value. */
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<ApiResult<T>> {
   const { method = "GET", json, form, token, cache = "no-store" } = options;
 
@@ -91,7 +83,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
   return { ok: true, data: payload as T };
 }
 
-/** The user shape the API returns (matches UserRead on the backend). */
+/** Mirrors UserRead on the backend. */
 export type User = {
   id: number;
   email: string;

@@ -13,9 +13,8 @@ logger = logging.getLogger(__name__)
 async def send_email(to: str, subject: str, plain_body: str, html_body: str) -> None:
     """Hand one message to the configured SMTP server.
 
-    Both a plain-text and an HTML part are attached; mail clients that can render
-    HTML show that one, and everything else falls back to the text - which also keeps
-    the message out of spam folders more reliably than HTML alone.
+    Text and HTML parts are both attached: clients that can't render HTML fall back to
+    the text, which also keeps the message out of spam folders more reliably.
     """
     message = EmailMessage()
     message["From"] = f"{settings.mail_from_name} <{settings.mail_from}>"
@@ -34,9 +33,8 @@ async def send_email(to: str, subject: str, plain_body: str, html_body: str) -> 
             password=settings.mail_password or None,
         )
     except Exception:
-        # This runs in a background task, after the response has already been sent, so
-        # raising would only produce an unhandled error in the log with no context.
-        # Log it deliberately instead - the user can always request a new link.
+        # Runs in a background task, after the response has gone, so raising would only
+        # produce a contextless traceback. The user can request a new link instead.
         logger.exception("Failed to send email to %s", to)
 
 
@@ -84,10 +82,10 @@ async def send_verification_email(to: str, username: str) -> None:
 
 
 async def send_password_reset_email(to: str, username: str, hashed_password: str) -> None:
-    """Send the "reset your password" message.
+    """Send the password-reset message.
 
-    The current password hash goes in only as a fingerprint inside the token, never in
-    the message, so this link stops working the moment the password actually changes.
+    The password hash goes in only as a fingerprint inside the token, so the link stops
+    working the moment the password actually changes.
     """
     token = generate_password_reset_token(to, hashed_password)
     link = f"{settings.password_reset_url_base}?{urlencode({'token': token})}"

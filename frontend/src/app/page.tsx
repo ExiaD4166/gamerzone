@@ -38,8 +38,7 @@ export default function HomePage() {
           >
             Community rules
           </h2>
-          {/* An ordered list because the numbers are shown and read out; they
-              are just labels here, not a ranking. */}
+          {/* Ordered because the numbers are shown, though they aren't a ranking. */}
           <ol className="flex flex-col gap-3">
             {communityRules.map((rule, index) => (
               <li key={rule} className="flex gap-3 text-[14.5px] leading-relaxed text-ink-2">

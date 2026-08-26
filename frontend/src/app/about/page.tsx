@@ -22,7 +22,7 @@ export default function AboutPage() {
       />
 
       <div className="mx-auto max-w-6xl px-6 pt-8 sm:px-8">
-        {/* The story. Held to a narrow measure so it stays comfortable to read. */}
+        {/* Narrow measure so the story stays comfortable to read. */}
         <section className="max-w-[68ch]">
           {about.story.map((paragraph) => (
             <p
@@ -34,7 +34,6 @@ export default function AboutPage() {
           ))}
         </section>
 
-        {/* What we offer. */}
         <section aria-labelledby="offer-heading" className="mt-16">
           <h2
             id="offer-heading"
@@ -63,8 +62,7 @@ export default function AboutPage() {
           </ul>
         </section>
 
-        {/* The rules, with room to breathe now that they are the subject rather
-            than a sidebar. */}
+        {/* Given room here, unlike the sidebar treatment on the home page. */}
         <section aria-labelledby="rules-heading" className="mt-16">
           <h2
             id="rules-heading"
@@ -91,7 +89,6 @@ export default function AboutPage() {
           </ol>
         </section>
 
-        {/* Closing invitation. */}
         <section className="mt-16 rounded-xl border border-line bg-surface px-6 py-10 sm:px-10">
           <p className="max-w-[54ch] font-display text-xl font-semibold leading-snug tracking-tight text-balance sm:text-2xl">
             {about.closing}

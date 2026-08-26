@@ -6,14 +6,9 @@ import { api, type User } from "@/lib/api";
 import { clearSession, createSession, getSessionToken } from "@/lib/session";
 
 /**
- * Server Actions for signing up, in and out.
- *
- * "use server" means none of this is ever sent to the browser. The API address,
- * the cookie handling and the token stay on the server; the browser only posts a
- * form and receives the result.
+ * Server Actions for signing up, in and out. "use server" keeps the API address,
+ * the cookie handling and the token off the browser entirely.
  */
-
-/** What a form returns to the page so it can show an error. */
 export type FormState = { error: string | null };
 
 export async function registerAction(
@@ -37,8 +32,7 @@ export async function registerAction(
     return { error: result.error.detail };
   }
 
-  // Redirect throws internally to unwind the request, so it must sit outside any
-  // try/catch and after every check that could fail.
+  // redirect() throws to unwind the request, so it must sit outside any try/catch.
   redirect(`/register/check-email?email=${encodeURIComponent(email)}`);
 }
 
@@ -50,8 +44,8 @@ export async function loginAction(_previous: FormState, formData: FormData): Pro
     return { error: "Please enter your email and password." };
   }
 
-  // The OAuth2 password flow expects form-encoded fields named username and
-  // password. We put the email in "username" because that is what we sign in with.
+  // The OAuth2 password flow expects form fields named username and password; the
+  // email goes in "username" because that is what we sign in with.
   const result = await api<{ access_token: string }>("/api/v1/auth/login", {
     method: "POST",
     form: { username: email, password },
@@ -69,9 +63,8 @@ export async function logoutAction(): Promise<never> {
   const token = await getSessionToken();
 
   if (token) {
-    // Tell the API to blacklist this token, so a copy of it cannot be replayed.
-    // If that call fails the cookie still goes: leaving the visitor signed in
-    // because cleanup failed would be the worse outcome.
+    // Blacklist it server-side so a copy cannot be replayed. If this fails the
+    // cookie still goes - staying signed in because cleanup failed is worse.
     await api("/api/v1/auth/logout", { method: "POST", token });
   }
 
@@ -79,11 +72,7 @@ export async function logoutAction(): Promise<never> {
   redirect("/");
 }
 
-/**
- * Some forms need three states, not two: nothing submitted yet, done, and
- * failed. A plain `error: null` cannot tell "no problem" apart from "not asked
- * yet", which would show a success message before the user had done anything.
- */
+/** Three states, because `error: null` cannot tell "fine" from "not asked yet". */
 export type ResendState = { status: "idle" | "sent"; error: string | null };
 
 export async function resendVerificationAction(
@@ -99,9 +88,7 @@ export async function resendVerificationAction(
     method: "POST",
   });
 
-  // Always reports the same thing. The API deliberately answers identically for
-  // addresses that exist and ones that don't, and repeating that here keeps the
-  // frontend from leaking what the API is careful not to.
+  // One answer for every address, matching what the API is careful to withhold.
   return { status: "sent", error: null };
 }
 
@@ -116,8 +103,7 @@ export async function forgotPasswordAction(
 
   await api("/api/v1/auth/forgot-password", { method: "POST", json: { email } });
 
-  // Same reasoning as resend: one answer for every address, so this cannot be
-  // used to find out who has an account.
+  // One answer for every address, so this cannot reveal who has an account.
   return { status: "sent", error: null };
 }
 
@@ -135,8 +121,7 @@ export async function resetPasswordAction(
   if (!password) {
     return { error: "Please choose a new password." };
   }
-  // Checked here rather than by the API, which never sees the second field —
-  // it exists purely to catch a typo before the password is committed.
+  // The API never sees the second field; it only catches a typo before commit.
   if (password !== confirmation) {
     return { error: "Those two passwords don't match." };
   }
@@ -150,10 +135,8 @@ export async function resetPasswordAction(
     return { error: result.error.detail };
   }
 
-  // Changing the password invalidates every token issued before it, including
-  // one this browser may still be holding. Dropping the cookie keeps the UI
-  // honest — otherwise the header would claim the visitor is signed in while
-  // every request quietly failed.
+  // The API invalidates every token predating the change, so this cookie is already
+  // dead; leaving it would show a signed-in header while every request failed.
   await clearSession();
   redirect("/login?reset=1");
 }

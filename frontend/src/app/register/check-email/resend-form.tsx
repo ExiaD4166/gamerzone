@@ -24,9 +24,7 @@ export function ResendForm({ defaultEmail }: { defaultEmail?: string }) {
 
       <div className="flex flex-wrap items-center gap-4">
         <SubmitButton>Send another link</SubmitButton>
-        {/* The message is deliberately non-committal: the API answers the same
-            way for an address that exists and one that doesn't, so saying more
-            here would give away what it withholds. */}
+        {/* Deliberately non-committal, matching what the API withholds. */}
         {state.status === "sent" && !isPending ? (
           <p role="status" className="text-[14px] text-ink-3">
             If that address needs confirming, a new link is on its way.

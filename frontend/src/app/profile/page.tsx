@@ -53,9 +53,7 @@ export default async function ProfilePage() {
 
   return (
     <>
-      {/* No photograph here by choice: the page is about the account, and a
-          screenshot behind it would only compete. The gradient keeps the same
-          rhythm as the other pages. */}
+      {/* No photograph by choice: the page is about the account. */}
       <PageHero kicker="Your account" title={user.username} compact />
 
       <div className="mx-auto max-w-3xl px-6 pt-8 sm:px-8">
@@ -88,9 +86,8 @@ export default async function ProfilePage() {
         </dl>
 
         <div className="mt-8 flex flex-wrap items-center gap-4">
-          {/* A form rather than a link, because signing out changes something:
-              it revokes the token on the server. A link would let a browser
-              prefetch it and sign the user out by accident. */}
+          {/* A form, not a link: it revokes the token server-side, and a link
+              could be prefetched and sign the user out by accident. */}
           <form action={logoutAction}>
             <button
               type="submit"

@@ -44,11 +44,8 @@ function ProblemMark() {
 }
 
 /**
- * Where the link in the confirmation email lands.
- *
- * The work happens on the server while the page renders, so the visitor sees a
- * finished result rather than a spinner. The email could point straight at the
- * API instead, but then following it would show raw JSON.
+ * Where the confirmation link lands. The work happens on the server while the page
+ * renders, so the visitor sees a result rather than a spinner.
  */
 export default async function VerifyPage({
   searchParams,

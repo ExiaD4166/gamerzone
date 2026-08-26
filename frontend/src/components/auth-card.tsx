@@ -1,11 +1,6 @@
 import Link from "next/link";
 
-/**
- * The frame every auth page sits in: a narrow centred card.
- *
- * These pages have one job each, so they skip the photo header the content pages
- * use — nothing should compete with the form.
- */
+/** A narrow centred card. No photo header — nothing should compete with the form. */
 export function AuthCard({
   title,
   intro,

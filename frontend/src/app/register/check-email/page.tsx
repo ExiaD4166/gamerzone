@@ -7,14 +7,10 @@ export const metadata: Metadata = {
   title: "Confirm your email",
 };
 
-/**
- * Where registration lands. The account exists but cannot reach anything yet —
- * the confirmation link has to be followed first.
- */
+/** Where registration lands: the account exists but is not usable yet. */
 export default async function CheckEmailPage({
   searchParams,
 }: {
-  // In Next 16 searchParams is a promise, in step with the other request-time APIs.
   searchParams: Promise<{ email?: string }>;
 }) {
   const { email } = await searchParams;

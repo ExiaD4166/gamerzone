@@ -14,9 +14,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
     <form action={formAction} className="flex flex-col gap-5">
       <FormError message={state.error} />
 
-      {/* The token travels from the URL into the submission. It is not secret
-          from the person holding the link — they just followed it — but it does
-          have to arrive alongside the new password. */}
+      {/* Carries the token from the URL into the submission. */}
       <input type="hidden" name="token" value={token} />
 
       <Field

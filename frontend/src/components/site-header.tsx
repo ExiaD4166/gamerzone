@@ -40,13 +40,12 @@ function NavItems({ className }: { className?: string }) {
  * The navigation bar. It is a solid strip of its own above the hero image, not
  * an overlay on top of it, so the links never have to compete with a photo.
  *
- * On phones the links move to a second row rather than hiding behind a
- * hamburger: with only four of them, a visible row costs less height than a
- * menu button and keeps the header free of client-side JavaScript.
+ * On phones the links move to a second row rather than hiding behind a hamburger:
+ * four links cost less height than a menu button, and it keeps the header free of
+ * client-side JavaScript.
  *
- * It reads the session on the server, so the signed-in and signed-out versions
- * arrive already rendered — there is no moment where the page shows "Sign in"
- * to somebody who is in fact signed in.
+ * The session is read on the server, so the page never flashes "Sign in" at somebody
+ * who is signed in.
  */
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -75,8 +74,8 @@ export async function SiteHeader() {
                   >
                     {user.username}
                   </Link>
-                  {/* A form, not a link: signing out revokes the token, and a
-                      link could be prefetched and fire by accident. */}
+                  {/* A form, not a link: it revokes the token, and a link could be
+                      prefetched and fire by accident. */}
                   <form action={logoutAction}>
                     <button
                       type="submit"

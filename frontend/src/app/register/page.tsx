@@ -11,7 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default async function RegisterPage() {
-  // Someone already signed in has no business on this page.
   if (await getCurrentUser()) redirect("/profile");
 
   return (

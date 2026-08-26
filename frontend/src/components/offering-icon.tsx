@@ -1,9 +1,6 @@
 import type { OfferingIcon as IconName } from "@/lib/site-content";
 
-/**
- * One stroke icon per offering, drawn rather than pulled from a font or emoji
- * set so they scale cleanly and inherit the accent colour.
- */
+/** Drawn rather than emoji, so they scale cleanly and inherit the accent colour. */
 export function OfferingIcon({ name }: { name: IconName }) {
   const shared = {
     viewBox: "0 0 24 24",

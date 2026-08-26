@@ -33,12 +33,7 @@ function FacebookIcon() {
   );
 }
 
-/**
- * The two ways into the community, used wherever we invite someone in.
- *
- * Both open in a new tab: they leave the site entirely, and rel="noreferrer
- * noopener" stops the opened page from being able to reach back into ours.
- */
+/** rel="noreferrer noopener" stops the opened page reaching back into ours. */
 export function CommunityLinks({ discordLabel = "Join our Discord" }: { discordLabel?: string }) {
   return (
     <div className="flex flex-wrap gap-3">

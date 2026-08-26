@@ -3,11 +3,8 @@
 import { useFormStatus } from "react-dom";
 
 /**
- * Small building blocks shared by the auth forms.
- *
- * These are Client Components because they react to the browser: the submit
- * button has to know whether the form is currently in flight. Everything else in
- * the auth pages stays on the server.
+ * Client Components because the submit button has to know whether the form is in
+ * flight. Everything else in the auth pages stays on the server.
  */
 
 export function Field({
@@ -58,8 +55,7 @@ export function Field({
 }
 
 export function SubmitButton({ children }: { children: React.ReactNode }) {
-  // useFormStatus reads the state of the <form> this button sits inside, which
-  // is why it has to be its own component rather than part of the form itself.
+  // useFormStatus reads the enclosing <form>, which is why this is its own component.
   const { pending } = useFormStatus();
 
   return (
@@ -77,8 +73,7 @@ export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
 
   return (
-    // role="alert" makes a screen reader announce this the moment it appears,
-    // rather than leaving it to be discovered.
+    // role="alert" so a screen reader announces it the moment it appears.
     <p
       role="alert"
       className="rounded-lg border border-[#5a2b22] bg-[#221512] px-4 py-3 text-[14px] leading-relaxed text-[#f0a89a]"

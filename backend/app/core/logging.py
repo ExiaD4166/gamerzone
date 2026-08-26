@@ -5,10 +5,10 @@ from app.core.config import settings
 
 
 def configure_logging() -> None:
-    """Set up application-wide logging once, at startup.
+    """Set up logging once, at startup.
 
-    Logs go to stdout rather than a file on purpose: containers and hosting platforms
-    collect stdout automatically, so writing our own files would only hide them.
+    stdout rather than a file: containers and hosting platforms collect stdout
+    automatically, so our own files would only hide the logs.
     """
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(
@@ -20,10 +20,8 @@ def configure_logging() -> None:
 
     root = logging.getLogger()
     root.setLevel(settings.log_level.upper())
-    # Replace any handlers already installed, so a reload doesn't stack duplicates and
-    # print every line twice.
+    # Replace rather than append, so a reload doesn't print every line twice.
     root.handlers = [handler]
 
-    # SQLAlchemy's echo already prints every statement when DEBUG is on; letting its
-    # own logger through as well would duplicate all of it.
+    # echo already prints every statement when DEBUG is on.
     logging.getLogger("sqlalchemy.engine").propagate = False

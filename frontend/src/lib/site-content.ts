@@ -1,9 +1,6 @@
 /**
- * Everything about the community that isn't code lives here.
- *
- * Rules, links and copy change far more often than layout does, and they appear
- * on several pages. Keeping them in one file means editing a rule is a one-line
- * change in one place rather than a hunt through components.
+ * All the community's copy in one place. Rules, links and wording change far more
+ * often than layout, and appear on several pages.
  */
 
 export const site = {
@@ -24,6 +21,7 @@ export const communityRules: readonly string[] = [
   "Use indicators precisely.",
   "Respect Your Fellow Drivers.",
   "Follow Admin Instructions.",
+  "Do Not Misuse and Reupload The Mod Files.",
 ];
 
 /** Icons are drawn in the component; this keeps the copy free of markup. */
