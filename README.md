@@ -4,7 +4,7 @@ A gaming community website — homepage, about page, member profiles, and a memb
 download page for game and mod links. Built to practice an industry-style full-stack
 workflow: layered architecture, real migrations, proper authentication, and tests.
 
-**Backend is feature-complete. Frontend is next.**
+**Backend is feature-complete. The frontend shell and home page are in; the remaining pages are next.**
 
 ---
 
@@ -45,7 +45,7 @@ links. Administrators curate those links. Everything is enforced server-side.
 | **Mail** | aiosmtplib; Mailpit locally so development never emails a real person |
 | **Tests** | pytest + httpx — 56 tests, 93% coverage, ~10s |
 | **Infra** | Docker Compose |
-| **Frontend** | Next.js + TypeScript — *not started* |
+| **Frontend** | Next.js 16 (App Router), TypeScript, Tailwind 4 |
 
 ## Architecture
 
@@ -103,6 +103,14 @@ Tests:
 cd backend && pytest
 ```
 
+The frontend runs independently — the home page needs no API:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
 Full backend detail — migrations, test isolation, project layout — is in
 [`backend/README.md`](backend/README.md).
 
@@ -129,7 +137,7 @@ Full backend detail — migrations, test isolation, project layout — is in
 ```
 gzone/
 ├── backend/            # FastAPI application
-├── frontend/           # Next.js application (not created yet)
+├── frontend/           # Next.js application
 └── docker-compose.yml  # PostgreSQL, Redis, Mailpit
 ```
 
@@ -146,7 +154,10 @@ gzone/
 - [x] Password reset
 - [x] CORS, uniform error handling, request logging
 - [x] pytest suite (56 tests, 93% coverage)
-- [ ] Next.js frontend
+- [x] Frontend shell and home page
+- [ ] About and downloads pages
+- [ ] Frontend auth (sign up, sign in, verify, reset)
+- [ ] Profile page
 - [ ] Celery for background email
 - [ ] Dockerfiles for the application services
 - [ ] Deployment to free-tier hosting
