@@ -155,7 +155,7 @@ gzone/
 - [x] CORS, uniform error handling, request logging
 - [x] pytest suite (56 tests, 93% coverage)
 - [x] Frontend shell and home page
-- [ ] About and downloads pages
+- [x] About page and locked downloads page
 - [ ] Frontend auth (sign up, sign in, verify, reset)
 - [ ] Profile page
 - [ ] Celery for background email
