@@ -156,8 +156,9 @@ gzone/
 - [x] pytest suite (56 tests, 93% coverage)
 - [x] Frontend shell and home page
 - [x] About page and locked downloads page
-- [ ] Frontend auth (sign up, sign in, verify, reset)
-- [ ] Profile page
+- [x] Frontend auth: sign up, confirm, sign in, sign out
+- [ ] Frontend password reset
+- [x] Profile page
 - [ ] Celery for background email
 - [ ] Dockerfiles for the application services
 - [ ] Deployment to free-tier hosting
