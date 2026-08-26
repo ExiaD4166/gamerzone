@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { logoutAction } from "@/lib/auth-actions";
+import { getCurrentUser } from "@/lib/session";
 import { navLinks, site } from "@/lib/site-content";
 
 function BusMark() {
@@ -42,9 +44,13 @@ function NavItems({ className }: { className?: string }) {
  * hamburger: with only four of them, a visible row costs less height than a
  * menu button and keeps the header free of client-side JavaScript.
  *
- * Sign in / Register are present but inert until the auth phase.
+ * It reads the session on the server, so the signed-in and signed-out versions
+ * arrive already rendered — there is no moment where the page shows "Sign in"
+ * to somebody who is in fact signed in.
  */
-export function SiteHeader() {
+export async function SiteHeader() {
+  const user = await getCurrentUser();
+
   return (
     <header className="border-b border-line bg-surface">
       <nav aria-label="Main" className="mx-auto max-w-6xl px-6 sm:px-8">
@@ -61,18 +67,41 @@ export function SiteHeader() {
             <NavItems className="hidden items-center gap-7 text-sm text-ink-2 sm:flex" />
 
             <div className="flex items-center gap-2.5">
-              <Link
-                href="/login"
-                className="rounded-md border border-line px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-ink-4"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-md bg-accent px-4 py-2 text-[13.5px] font-semibold text-accent-ink transition-colors hover:bg-accent-hover"
-              >
-                Register
-              </Link>
+              {user ? (
+                <>
+                  <Link
+                    href="/profile"
+                    className="hidden text-sm text-ink-2 transition-colors hover:text-ink sm:inline"
+                  >
+                    {user.username}
+                  </Link>
+                  {/* A form, not a link: signing out revokes the token, and a
+                      link could be prefetched and fire by accident. */}
+                  <form action={logoutAction}>
+                    <button
+                      type="submit"
+                      className="rounded-md border border-line px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-ink-4"
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="rounded-md border border-line px-4 py-2 text-[13.5px] font-medium transition-colors hover:border-ink-4"
+                  >
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="rounded-md bg-accent px-4 py-2 text-[13.5px] font-semibold text-accent-ink transition-colors hover:bg-accent-hover"
+                  >
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

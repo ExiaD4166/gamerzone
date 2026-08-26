@@ -1,10 +1,14 @@
 import Image from "next/image";
 
 type PageHeroProps = {
-  /** Path under /public, e.g. "/images/hero-home.jpg" */
-  image: string;
+  /**
+   * Path under /public, e.g. "/images/hero-home.jpg". Omit it for a page that
+   * has no photograph of its own — a warm gradient stands in, keeping the same
+   * proportions and rhythm as the other pages.
+   */
+  image?: string;
   /** Describes the picture for screen readers and when the image fails to load. */
-  imageAlt: string;
+  imageAlt?: string;
   title: string;
   /** Small line above the title. */
   kicker?: string;
@@ -14,6 +18,8 @@ type PageHeroProps = {
    * as a slow largest-contentful-paint.
    */
   priority?: boolean;
+  /** A shorter band, for pages whose content matters more than their header. */
+  compact?: boolean;
 };
 
 /**
@@ -26,20 +32,42 @@ type PageHeroProps = {
  *
  * Each page passes its own image; nothing else has to change.
  */
-export function PageHero({ image, imageAlt, title, kicker, priority = false }: PageHeroProps) {
+export function PageHero({
+  image,
+  imageAlt = "",
+  title,
+  kicker,
+  priority = false,
+  compact = false,
+}: PageHeroProps) {
   return (
     <section className="relative isolate">
       {/* Fixed aspect ratio so the crop is identical on every page and the
           browser reserves the right height before the image arrives. */}
-      <div className="relative aspect-[16/9] max-h-[62vh] min-h-[280px] w-full overflow-hidden">
-        <Image
-          src={image}
-          alt={imageAlt}
-          fill
-          priority={priority}
-          sizes="100vw"
-          className="object-cover"
-        />
+      <div
+        className={`relative w-full overflow-hidden ${
+          compact
+            ? "aspect-[21/6] max-h-[34vh] min-h-[180px]"
+            : "aspect-[16/9] max-h-[62vh] min-h-[280px]"
+        }`}
+      >
+        {image ? (
+          <Image
+            src={image}
+            alt={imageAlt}
+            fill
+            priority={priority}
+            sizes="100vw"
+            className="object-cover"
+          />
+        ) : (
+          // The stand-in when a page has no photo: a warm dusk-ish wash, so the
+          // header still reads as part of the same site.
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-[radial-gradient(ellipse_60%_70%_at_30%_20%,#3a332c,transparent_70%),radial-gradient(ellipse_50%_60%_at_85%_40%,#2e2723,transparent_70%),linear-gradient(180deg,#232020,#151312)]"
+          />
+        )}
 
         {/* Two stacked gradients: a gentle darkening across the whole image so
             white text stays readable, then a stronger fade that blends the
@@ -62,7 +90,11 @@ export function PageHero({ image, imageAlt, title, kicker, priority = false }: P
               {kicker}
             </p>
           ) : null}
-          <h1 className="font-display text-4xl font-bold leading-[1.04] tracking-tight text-balance sm:text-5xl lg:text-6xl">
+          <h1
+            className={`font-display font-bold leading-[1.04] tracking-tight text-balance ${
+              compact ? "text-3xl sm:text-4xl" : "text-4xl sm:text-5xl lg:text-6xl"
+            }`}
+          >
             {title}
           </h1>
         </div>
