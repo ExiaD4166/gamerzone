@@ -157,8 +157,9 @@ gzone/
 - [x] Frontend shell and home page
 - [x] About page and locked downloads page
 - [x] Frontend auth: sign up, confirm, sign in, sign out
-- [ ] Frontend password reset
+- [x] Frontend password reset
 - [x] Profile page
+- [x] Admin area for managing download links
 - [ ] Celery for background email
 - [ ] Dockerfiles for the application services
 - [ ] Deployment to free-tier hosting
