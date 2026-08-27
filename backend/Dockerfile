@@ -26,7 +26,12 @@ USER appuser
 
 EXPOSE 8000
 
-# The host platform assigns the port and passes it in as $PORT; 8000 is the local
-# fallback. Binding to 0.0.0.0 rather than localhost is required for anything
-# outside the container to reach it.
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Migrations run on start rather than as a separate deploy step, because a
+# pre-deploy hook is not available on every host's free tier. If they fail the
+# container refuses to start, which is the right outcome - serving requests
+# against a schema that never got applied would only fail later and less clearly.
+#
+# The host assigns the port and passes it as $PORT; 8000 is the local fallback.
+# Binding to 0.0.0.0 rather than localhost is what makes the container reachable
+# from outside itself.
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
