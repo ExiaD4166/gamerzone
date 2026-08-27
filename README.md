@@ -4,8 +4,13 @@ A gaming community website — homepage, about page, member profiles, and a memb
 download page for game and mod links. Built to practice an industry-style full-stack
 workflow: layered architecture, real migrations, proper authentication, and tests.
 
-**Feature-complete and running locally. Deployment is the next step — see
-[DEPLOYMENT.md](DEPLOYMENT.md).**
+**Live: [gamerzone-khaki.vercel.app](https://gamerzone-khaki.vercel.app)** ·
+[API docs](https://gamerzone-api.onrender.com/docs)
+
+> The API is on a free tier and sleeps after fifteen idle minutes. The home and about
+> pages never touch it, and loading the home page wakes it in the background — so by the
+> time you reach Downloads or Sign in it is usually ready. If a page hangs on a first
+> visit, that is why; give it a moment.
 
 ---
 
@@ -45,7 +50,7 @@ links. Administrators curate those links. Everything is enforced server-side.
 | **Auth** | OAuth2 password flow, JWT (PyJWT), Argon2id (pwdlib), itsdangerous for signed links |
 | **Mail** | aiosmtplib; Mailpit locally so development never emails a real person |
 | **Tests** | pytest + httpx — 56 tests, 93% coverage, ~10s |
-| **Infra** | Docker Compose |
+| **Infra** | Docker Compose locally; Vercel + Render + Neon + Upstash in production |
 | **Frontend** | Next.js 16 (App Router), TypeScript, Tailwind 4 |
 
 ## Architecture
@@ -170,4 +175,4 @@ docker compose --profile full up -d --build
 - [x] Admin area for managing download links
 - [ ] Celery for background email
 - [x] Dockerfile for the API
-- [ ] Deployment to free-tier hosting — see [DEPLOYMENT.md](DEPLOYMENT.md)
+- [x] Deployed on free-tier hosting — see [DEPLOYMENT.md](DEPLOYMENT.md)
