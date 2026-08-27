@@ -46,6 +46,35 @@ services:
       - "${MAILPIT_SMTP_PORT:-1025}:1025"  # SMTP, where the app sends
       - "${MAILPIT_UI_PORT:-8025}:8025"    # web inbox, where you read
 
+  # The API, built from backend/Dockerfile. Behind a profile, so the everyday
+  # `docker compose up -d` still starts only the three services above and the API
+  # keeps running from uvicorn with reload. Start this one with:
+  #     docker compose --profile full up -d --build
+  # Its purpose is to prove the image works before a host builds it.
+  api:
+    build: ./backend
+    container_name: gamerzone-api
+    profiles: ["full"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Inside the compose network, services reach each other by service name -
+      # "localhost" here would mean this container itself.
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379/0
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      SECRET_KEY: ${SECRET_KEY:-local-compose-only-not-a-real-secret}
+      VERIFICATION_URL_BASE: http://localhost:3000/verify
+      PASSWORD_RESET_URL_BASE: http://localhost:3000/reset-password
+      CORS_ORIGINS: http://localhost:3000
+      DEBUG: "false"
+    ports:
+      - "${API_PORT:-8001}:8000"
+
 volumes:
   gamerzone_pgdata:
   gamerzone_redisdata:

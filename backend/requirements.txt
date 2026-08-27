@@ -1,50 +1,28 @@
-aiosmtplib==5.1.2
-alembic==1.19.1
-annotated-doc==0.0.5
-annotated-types==0.8.0
-anyio==4.14.2
-argon2-cffi==25.1.0
-argon2-cffi-bindings==26.1.0
-asyncpg==0.31.0
-certifi==2026.7.22
-cffi==2.1.1
-click==8.4.2
-colorama==0.4.6
-coverage==7.15.4
-dnspython==2.8.0
-email-validator==2.3.0
+# Runtime dependencies only. Test tooling lives in requirements-dev.txt so the
+# production image doesn't carry it.
+#
+# These are the packages the project imports directly; pip resolves the rest.
+# A lock file (uv, pip-tools) would pin transitive versions too - worth adding if
+# builds ever need to be byte-for-byte reproducible.
+
 fastapi==0.141.1
-greenlet==3.5.5
-h11==0.16.0
-httpcore==1.0.9
-httptools==0.8.0
-httpx==0.28.1
-idna==3.19
-iniconfig==2.3.0
-itsdangerous==2.2.0
-Mako==1.4.1
-MarkupSafe==3.0.3
-packaging==26.3
-pluggy==1.6.0
-pwdlib==0.3.1
-pycparser==3.0
-pydantic==2.13.4
-pydantic-settings==2.15.0
-pydantic_core==2.46.4
-Pygments==2.21.0
-PyJWT==2.13.0
-pytest==9.1.1
-pytest-asyncio==1.4.0
-pytest-cov==7.1.0
-python-dotenv==1.2.3
-python-multipart==0.0.32
-PyYAML==6.0.3
-redis==8.1.0
-SQLAlchemy==2.0.52
+uvicorn[standard]==0.52.4
+
+# Database
 sqlmodel==0.0.39
-starlette==1.6.0
-typing-inspection==0.4.4
-typing_extensions==4.16.0
-uvicorn==0.52.4
-watchfiles==1.2.0
-websockets==17.0.1
+asyncpg==0.31.0
+alembic==1.19.1
+
+# Configuration
+pydantic-settings==2.15.0
+
+# Auth
+pwdlib[argon2]==0.3.1
+PyJWT==2.13.0
+python-multipart==0.0.32
+email-validator==2.3.0
+itsdangerous==2.2.0
+
+# Sessions and mail
+redis==8.1.0
+aiosmtplib==5.1.2

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { CommunityLinks } from "@/components/community-links";
 import { PageHero } from "@/components/page-hero";
+import { WarmUp } from "@/components/warm-up";
 import { communityRules, site } from "@/lib/site-content";
 
 export const metadata: Metadata = {
@@ -12,6 +13,10 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
+      {/* Wakes the API while the visitor reads, so a sleeping free-tier service
+          isn't waiting to be woken when they click Downloads or Sign in. */}
+      <WarmUp />
+
       <PageHero
         image="/images/hero-home.jpg"
         imageAlt="A Bangladeshi Unique Poribohon coach on a wet highway at dusk, from Euro Truck Simulator 2"

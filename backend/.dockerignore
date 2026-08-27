@@ -1,0 +1,17 @@
+# Keeps the build context small and stops local secrets or a host-built virtualenv
+# from being copied into the image.
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+.env
+.env.*
+!.env.example
+
+tests/
+requirements-dev.txt
+
+*.md

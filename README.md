@@ -4,7 +4,8 @@ A gaming community website — homepage, about page, member profiles, and a memb
 download page for game and mod links. Built to practice an industry-style full-stack
 workflow: layered architecture, real migrations, proper authentication, and tests.
 
-**Backend is feature-complete. The frontend shell and home page are in; the remaining pages are next.**
+**Feature-complete and running locally. Deployment is the next step — see
+[DEPLOYMENT.md](DEPLOYMENT.md).**
 
 ---
 
@@ -86,7 +87,7 @@ docker compose up -d
 cd backend
 python -m venv .venv
 .venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 cp .env.example .env
 alembic upgrade head
 uvicorn app.main:app --reload
@@ -136,9 +137,16 @@ Full backend detail — migrations, test isolation, project layout — is in
 
 ```
 gzone/
-├── backend/            # FastAPI application
+├── backend/            # FastAPI application (+ Dockerfile)
 ├── frontend/           # Next.js application
-└── docker-compose.yml  # PostgreSQL, Redis, Mailpit
+├── docker-compose.yml  # PostgreSQL, Redis, Mailpit
+└── DEPLOYMENT.md       # deploying all five services on free tiers
+```
+
+The API can also run containerised, which is how a host builds it:
+
+```bash
+docker compose --profile full up -d --build
 ```
 
 ## Progress
@@ -161,5 +169,5 @@ gzone/
 - [x] Profile page
 - [x] Admin area for managing download links
 - [ ] Celery for background email
-- [ ] Dockerfiles for the application services
-- [ ] Deployment to free-tier hosting
+- [x] Dockerfile for the API
+- [ ] Deployment to free-tier hosting — see [DEPLOYMENT.md](DEPLOYMENT.md)
