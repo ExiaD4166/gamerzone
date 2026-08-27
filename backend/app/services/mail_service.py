@@ -32,10 +32,21 @@ async def send_email(to: str, subject: str, plain_body: str, html_body: str) -> 
             username=settings.mail_username or None,
             password=settings.mail_password or None,
         )
-    except Exception:
+    except Exception as exc:
         # Runs in a background task, after the response has gone, so raising would only
         # produce a contextless traceback. The user can request a new link instead.
-        logger.exception("Failed to send email to %s", to)
+        #
+        # The cause goes on the message line, not just in the traceback: log viewers
+        # filter by line, and a bare "failed to send" is not worth reading.
+        logger.exception(
+            "Failed to send email to %s via %s:%s as %r - %s: %s",
+            to,
+            settings.mail_host,
+            settings.mail_port,
+            settings.mail_username,
+            type(exc).__name__,
+            exc,
+        )
 
 
 async def send_verification_email(to: str, username: str) -> None:
