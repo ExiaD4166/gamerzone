@@ -133,6 +133,17 @@ export default async function DownloadsPage() {
     <>
       <Hero />
       <div className="mx-auto max-w-6xl px-6 pt-8 sm:px-8">
+        {user.is_superuser ? (
+          <div className="mb-6 flex justify-end">
+            <Link
+              href="/admin/downloads"
+              className="rounded-lg border border-[#5a4326] px-4 py-2 text-[14px] text-accent transition-colors hover:bg-[#221a12]"
+            >
+              Manage downloads
+            </Link>
+          </div>
+        ) : null}
+
         {!result.ok ? (
           <p className="rounded-xl border border-line bg-surface px-6 py-8 text-center text-[15px] text-ink-2">
             {result.error.detail}

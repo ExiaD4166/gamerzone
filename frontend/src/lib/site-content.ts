@@ -24,6 +24,13 @@ export const communityRules: readonly string[] = [
   "Do Not Misuse and Reupload The Mod Files.",
 ];
 
+/**
+ * The categories a download can be filed under, offered as a fixed list in the admin
+ * form. The API accepts any string, but a free-text field would let "mod" and "Mod"
+ * become two different badges. Add to this list to add a category.
+ */
+export const downloadCategories = ["game", "mod", "map", "skin", "tool"] as const;
+
 /** Icons are drawn in the component; this keeps the copy free of markup. */
 export type OfferingIcon = "convoy" | "mods" | "community" | "events";
 

@@ -68,6 +68,14 @@ export async function SiteHeader() {
             <div className="flex items-center gap-2.5">
               {user ? (
                 <>
+                  {user.is_superuser ? (
+                    <Link
+                      href="/admin/downloads"
+                      className="hidden rounded-md border border-[#5a4326] px-3 py-2 text-[13px] text-accent transition-colors hover:bg-[#221a12] sm:inline-block"
+                    >
+                      Admin
+                    </Link>
+                  ) : null}
                   <Link
                     href="/profile"
                     className="hidden text-sm text-ink-2 transition-colors hover:text-ink sm:inline"
