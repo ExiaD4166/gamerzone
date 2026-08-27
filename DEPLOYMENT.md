@@ -42,16 +42,30 @@ that address doesn't exist until step 5.
 
 ## 1. PostgreSQL — Neon
 
-Create a project at [neon.tech](https://neon.tech) and copy the connection string.
+Create a project at [neon.tech](https://neon.tech). Enable only **Postgres** — not Neon
+Auth, which would duplicate the authentication this project implements itself.
 
-It will look like `postgresql://user:pass@host/db?sslmode=require`. **Change the scheme
-to `postgresql+asyncpg://`** — SQLAlchemy needs to be told which driver to use:
+Pick the region closest to your users, and **use the same region for Render**. Every
+request makes several database round trips, so a database on another continent from the
+API is the costliest latency mistake available.
+
+Copy the **pooled** connection string (its host contains `-pooler`), then rewrite it:
 
 ```
-postgresql+asyncpg://user:pass@host/dbname
+# what Neon gives you
+postgresql://user:pass@ep-xxx-pooler.region.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+
+# what this app needs
+postgresql+asyncpg://user:pass@ep-xxx-pooler.region.aws.neon.tech/neondb?ssl=require
 ```
 
-Prefer the **pooled** connection string if Neon offers both.
+Three changes, and all three matter:
+
+1. `postgresql://` → `postgresql+asyncpg://`, so SQLAlchemy loads the right driver.
+2. Drop `sslmode` and `channel_binding`. Those are **libpq** parameters; asyncpg does
+   not accept them and raises `TypeError: connect() got an unexpected keyword argument
+   'sslmode'` before it ever reaches the network.
+3. Add `?ssl=require` — Neon requires TLS, and `ssl` is the name asyncpg understands.
 
 ## 2. Redis — Upstash
 
