@@ -13,7 +13,7 @@ export const site = {
 /** TODO: replace with the real invite and page URLs. */
 export const socialLinks = {
   discord: "https://discord.gg/REPLACE-ME",
-  facebook: "https://facebook.com/REPLACE-ME",
+  facebook: "https://www.facebook.com/gamer0zone",
 } as const;
 
 export const communityRules: readonly string[] = [
