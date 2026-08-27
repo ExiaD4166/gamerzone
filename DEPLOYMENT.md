@@ -105,7 +105,7 @@ Environment variables:
 | `DATABASE_URL` | From step 1 |
 | `REDIS_URL` | From step 2 |
 | `MAIL_HOST` | `smtp-relay.brevo.com` |
-| `MAIL_PORT` | `587` |
+| `MAIL_PORT` | `2525` — see below, `587` will not work |
 | `MAIL_USERNAME` / `MAIL_PASSWORD` | From step 3 |
 | `MAIL_USE_TLS` | `true` |
 | `MAIL_FROM` | Your verified sender address |
@@ -122,6 +122,27 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
 Do not set `PORT` — Render assigns it, and the Dockerfile reads it.
+
+### Use SMTP port 2525, not 587
+
+Hosts commonly block outbound connections on the standard SMTP ports (25, 465, 587) so
+a free instance cannot be used to send spam. The symptom is distinctive: a **timeout**
+rather than a refusal or an authentication error, because the firewall drops the packets
+silently.
+
+```
+SMTPConnectTimeoutError: Timed out connecting to smtp-relay.brevo.com on port 587
+```
+
+Brevo also listens on **2525**, which is not a standard SMTP port and is generally not
+blocked. Changing `MAIL_PORT` is the whole fix.
+
+If a host blocks that too, switch to Brevo's HTTP API — it runs over HTTPS on 443, which
+is never blocked. That needs a code change, so try 2525 first.
+
+**Diagnosing this class of problem:** check whether *other* outbound connections work.
+Postgres on 5432 and Redis on 6379 connecting fine while 587 times out points at a
+port-specific block rather than a network or credentials fault.
 
 ## 5. The frontend — Vercel
 
