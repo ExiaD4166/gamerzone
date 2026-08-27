@@ -88,12 +88,14 @@ Create a **Web Service** from your GitHub repo at [render.com](https://render.co
 | Setting | Value |
 |---|---|
 | Root directory | `backend` |
-| Environment | Docker (it will find `backend/Dockerfile`) |
-| Pre-deploy command | `alembic upgrade head` |
+| Language / Environment | Docker (it will find `backend/Dockerfile`) |
+| Region | The same one as your database |
+| Instance type | Free |
 | Health check path | `/api/v1/health` |
 
-The pre-deploy command is what applies migrations. Without it the tables never get
-created, and every request fails on a missing table.
+Migrations are applied by the container's start command, not by a pre-deploy hook —
+hooks are not available on every free tier. Nothing to configure, and a failed
+migration stops the container instead of serving against a missing schema.
 
 Environment variables:
 
